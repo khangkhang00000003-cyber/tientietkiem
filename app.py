@@ -1,6 +1,6 @@
 
 import streamlit as st
-st.image("logo.jpg")
+st.image("logo.jpg.jpg")
 from datetime import date, timedelta
 
 st.set_page_config(
