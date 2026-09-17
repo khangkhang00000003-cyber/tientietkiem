@@ -11,7 +11,7 @@ st.set_page_config(
 )
 
 # 2. Hiển thị ảnh làm banner trải dài full-width
-st.image("logo.jpg", use_container_width=True)
+st.image("logo.jpg.jpg", use_container_width=True)
 
 # 3. Các nội dung tiếp theo của web
 st.title("💰 Tính tiền lãi của Võ Hoàn Khang")
