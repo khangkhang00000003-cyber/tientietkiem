@@ -1,14 +1,12 @@
-# =========================
-# HEADER
-# =========================
-st.markdown(
-    """
-    <div class="hero">
-        <h1>💰 Tính tiền lãi của Võ Hoàn Khang</h1>
-        <p>Công cụ tính tiền lãi tiền gửi • Tái tục tự động • Xử lý rút trước hạn</p>
-    </div>
-    """,
-    unsafe_allow_html=True,
+
+import streamlit as st
+from datetime import date, timedelta
+
+st.set_page_config(
+    page_title="Tính tiền lãi của Võ Hoàn Khang",
+    page_icon="💰",
+    layout="wide",
+    initial_sidebar_state="collapsed",
 )
 
 # =========================
