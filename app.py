@@ -1,14 +1,20 @@
 
 import streamlit as st
-st.image("logo.jpg.jpg")
 from datetime import date, timedelta
 
+# 1. Cấu hình trang (luôn ở đầu tiên)
 st.set_page_config(
     page_title="Tính tiền lãi của Võ Hoàn Khang",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
+
+# 2. Hiển thị ảnh làm banner trải dài full-width
+st.image("logo.jpg", use_container_width=True)
+
+# 3. Các nội dung tiếp theo của web
+st.title("💰 Tính tiền lãi của Võ Hoàn Khang")
 
 # =========================
 # GIAO DIỆN
