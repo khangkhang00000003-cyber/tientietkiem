@@ -1,551 +1,713 @@
+
 import streamlit as st
-import calendar
-from datetime import date
+from datetime import date, timedelta
 
-st.set_page_config(page_title="Tính lãi tiết kiệm_Võ Hoàn Khang", page_icon="◆", layout="centered")
+st.set_page_config(
+    page_title="Tính lãi tiết kiệm của Võ Hoàn Khang",
+    page_icon="💰",
+    layout="wide",
+    initial_sidebar_state="collapsed",
+)
 
-# ============================================================================
-# TOKEN HỆ THỐNG THIẾT KẾ
-#   Màu nền  : #0A1420 (navy gần đen, chất liệu "két sắt")
-#   Bề mặt   : #101C2B / #142335
-#   Viền     : #223349
-#   Vàng     : #C9A961 (vàng đồng, dịu — điểm nhấn duy nhất)
-#   Chữ chính: #ECEEF1     Chữ phụ: #8B97A8
-#   Tích cực : #7FBF9E (sage)   Cảnh báo: #C9A961   Lỗi: #C97B6B
-#   Font hiển thị số/tiêu đề: Fraunces (serif có cá tính)
-#   Font nội dung: Inter
-#   Bố cục: dạng "bảng sao kê" — không dùng card/bóng đổ, chỉ dùng
-#           đường kẻ mảnh (hairline) màu vàng để phân tách.
-# ============================================================================
+# =========================
+# GIAO DIỆN
+# =========================
+st.markdown(
+    """
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-PALETTE = {
-    "bg": "#0A1420",
-    "surface": "#101C2B",
-    "surface2": "#14233A",
-    "border": "#223349",
-    "gold": "#C9A961",
-    "gold_soft": "rgba(201,169,97,0.16)",
-    "text": "#ECEEF1",
-    "muted": "#8B97A8",
-    "positive": "#7FBF9E",
-    "warn": "#C9A961",
-    "error": "#C97B6B",
-}
+    html, body, [class*="css"] {
+        font-family: 'Inter', sans-serif;
+    }
 
-st.markdown(f"""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap');
+    .stApp {
+        background:
+            radial-gradient(circle at 10% 10%, rgba(212,175,55,.10), transparent 28%),
+            radial-gradient(circle at 90% 15%, rgba(38,99,235,.10), transparent 26%),
+            #0b1220;
+        color: #eef2ff;
+    }
 
-html, body, [class*="css"] {{
-    font-family: 'Inter', sans-serif;
-}}
+    .main .block-container {
+        max-width: 1180px;
+        padding-top: 2rem;
+        padding-bottom: 3rem;
+    }
 
-.stApp {{
-    background: radial-gradient(ellipse 1200px 600px at 50% -10%, #101F30 0%, {PALETTE['bg']} 55%);
-    color: {PALETTE['text']};
-}}
+    .hero {
+        padding: 28px 32px;
+        border: 1px solid rgba(255,255,255,.10);
+        border-radius: 24px;
+        background: linear-gradient(135deg, rgba(18,29,52,.96), rgba(12,20,35,.96));
+        box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        margin-bottom: 22px;
+    }
 
-[data-testid="stHeader"] {{
-    background: transparent;
-}}
+    .hero h1 {
+        margin: 0;
+        font-size: 34px;
+        font-weight: 800;
+        letter-spacing: -.5px;
+    }
 
-.block-container {{
-    max-width: 760px;
-    padding-top: 2.5rem;
-    padding-bottom: 4rem;
-}}
+    .hero p {
+        margin: 8px 0 0;
+        color: #aebbd0;
+        font-size: 15px;
+    }
 
-/* ---------- Hero ---------- */
-.hero-eyebrow {{
-    color: {PALETTE['gold']};
-    font-size: 0.82rem;
-    letter-spacing: 0.02em;
-    margin-bottom: 0.3rem;
-    font-weight: 500;
-}}
-.hero-title {{
-    font-family: 'Fraunces', serif;
-    font-weight: 500;
-    font-size: 2.5rem;
-    line-height: 1.15;
-    color: {PALETTE['text']};
-    margin: 0 0 0.6rem 0;
-}}
-.hero-sub {{
-    color: {PALETTE['muted']};
-    font-size: 1rem;
-    line-height: 1.6;
-    max-width: 560px;
-    margin-bottom: 1.6rem;
-}}
-.gold-rule {{
-    border: none;
-    border-top: 1px solid {PALETTE['gold']};
-    opacity: 0.55;
-    margin: 1.6rem 0;
-}}
-.hair-rule {{
-    border: none;
-    border-top: 1px solid {PALETTE['border']};
-    margin: 1.4rem 0;
-}}
+    .section-title {
+        font-size: 19px;
+        font-weight: 700;
+        margin: 20px 0 10px;
+    }
 
-/* ---------- Section labels ---------- */
-.section-label {{
-    font-family: 'Fraunces', serif;
-    font-size: 1.05rem;
-    color: {PALETTE['text']};
-    margin: 0.2rem 0 0.9rem 0;
-    font-weight: 500;
-}}
+    .card {
+        border: 1px solid rgba(255,255,255,.08);
+        border-radius: 18px;
+        padding: 18px 20px;
+        background: rgba(18,29,52,.75);
+        box-shadow: 0 10px 30px rgba(0,0,0,.15);
+        margin-bottom: 14px;
+    }
 
-/* ---------- Inputs ---------- */
-[data-testid="stNumberInput"] input,
-[data-testid="stDateInput"] input,
-[data-testid="stSelectbox"] div[data-baseweb="select"] > div {{
-    background-color: {PALETTE['surface2']} !important;
-    color: {PALETTE['text']} !important;
-    border: 1px solid {PALETTE['border']} !important;
-    border-radius: 3px !important;
-}}
-label[data-testid="stWidgetLabel"] p {{
-    color: {PALETTE['muted']} !important;
-    font-size: 0.86rem !important;
-    font-weight: 500 !important;
-}}
-[data-testid="stNumberInput"] button {{
-    background-color: {PALETTE['surface2']} !important;
-    border-color: {PALETTE['border']} !important;
-    color: {PALETTE['gold']} !important;
-}}
+    .metric-card {
+        border: 1px solid rgba(212,175,55,.22);
+        border-radius: 18px;
+        padding: 20px;
+        background: linear-gradient(145deg, rgba(37,31,17,.92), rgba(17,26,43,.94));
+        min-height: 115px;
+    }
 
-/* ---------- Radio -> segmented tabs ---------- */
-[data-testid="stRadio"] > div {{
-    gap: 0.4rem;
-}}
-[data-testid="stRadio"] label {{
-    background-color: {PALETTE['surface']};
-    border: 1px solid {PALETTE['border']};
-    padding: 0.5rem 1rem;
-    border-radius: 3px;
-    margin-right: 0;
-}}
-[data-testid="stRadio"] label:has(input:checked) {{
-    border-color: {PALETTE['gold']};
-    background-color: {PALETTE['gold_soft']};
-}}
-[data-testid="stRadio"] label div p {{
-    color: {PALETTE['text']} !important;
-    font-size: 0.88rem;
-}}
+    .metric-label {
+        color: #aebbd0;
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
 
-/* ---------- Button ---------- */
-.stButton > button {{
-    background-color: {PALETTE['gold']};
-    color: #16212E;
-    border: none;
-    border-radius: 3px;
-    font-weight: 600;
-    padding: 0.7rem 1rem;
-    letter-spacing: 0.01em;
-    transition: background-color 0.15s ease;
-}}
-.stButton > button:hover {{
-    background-color: #DDBE7C;
-    color: #16212E;
-}}
-.stButton > button:active {{
-    background-color: #B6944F;
-}}
+    .metric-value {
+        font-size: 26px;
+        font-weight: 800;
+        color: #f7d774;
+    }
 
-/* ---------- Alerts fallback (validation errors) ---------- */
-[data-testid="stAlert"] {{
-    background-color: {PALETTE['surface']} !important;
-    border: 1px solid {PALETTE['border']} !important;
-    border-left: 3px solid {PALETTE['error']} !important;
-    color: {PALETTE['text']} !important;
-    border-radius: 2px !important;
-}}
+    .subtle {
+        color: #9aa9bf;
+        font-size: 13px;
+    }
 
-/* ---------- Expander ---------- */
-[data-testid="stExpander"] {{
-    border: 1px solid {PALETTE['border']} !important;
-    border-radius: 3px !important;
-    background-color: {PALETTE['surface']} !important;
-}}
-[data-testid="stExpander"] summary {{
-    color: {PALETTE['muted']} !important;
-    font-size: 0.9rem;
-}}
+    .rule {
+        height: 1px;
+        background: rgba(255,255,255,.08);
+        margin: 14px 0;
+    }
 
-/* ---------- Custom banner ---------- */
-.banner {{
-    border-left: 3px solid {PALETTE['gold']};
-    background-color: {PALETTE['surface']};
-    padding: 0.85rem 1.1rem;
-    margin: 0.9rem 0;
-    border-radius: 2px;
-    font-size: 0.92rem;
-    line-height: 1.55;
-    color: {PALETTE['text']};
-}}
-.banner.positive {{ border-left-color: {PALETTE['positive']}; }}
-.banner.warn {{ border-left-color: {PALETTE['warn']}; }}
-.banner.muted {{ border-left-color: {PALETTE['border']}; color: {PALETTE['muted']}; }}
+    div[data-testid="stButton"] > button {
+        border-radius: 12px;
+        border: 0;
+        padding: 0.72rem 1.2rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #e5c55e, #b8922f);
+        color: #111827;
+        box-shadow: 0 10px 24px rgba(212,175,55,.20);
+    }
 
-/* ---------- Ledger summary row ---------- */
-.ledger-row {{
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    padding: 1.6rem 0 1.4rem 0;
-}}
-.ledger-item {{
-    flex: 1;
-    padding-right: 1.2rem;
-}}
-.ledger-item .l {{
-    color: {PALETTE['muted']};
-    font-size: 0.82rem;
-    margin-bottom: 0.35rem;
-}}
-.ledger-item .v {{
-    font-family: 'Fraunces', serif;
-    font-size: 1.5rem;
-    color: {PALETTE['text']};
-    font-weight: 500;
-}}
-.ledger-item.total .v {{
-    color: {PALETTE['gold']};
-    font-size: 2.05rem;
-}}
-.ledger-item.total .l {{
-    color: {PALETTE['gold']};
-}}
+    div[data-testid="stButton"] > button:hover {
+        filter: brightness(1.05);
+        transform: translateY(-1px);
+    }
 
-/* ---------- Ledger table ---------- */
-table.ledger-table {{
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.9rem;
-    margin: 0.6rem 0 1.2rem 0;
-}}
-table.ledger-table th {{
-    text-align: left;
-    color: {PALETTE['muted']};
-    font-weight: 500;
-    font-size: 0.78rem;
-    padding: 0.5rem 0.7rem;
-    border-bottom: 1px solid {PALETTE['gold']};
-}}
-table.ledger-table td {{
-    padding: 0.6rem 0.7rem;
-    border-bottom: 1px solid {PALETTE['border']};
-    color: {PALETTE['text']};
-}}
-table.ledger-table tr:last-child td {{
-    border-bottom: none;
-}}
-table.ledger-table td.num, table.ledger-table th.num {{
-    text-align: right;
-    font-variant-numeric: tabular-nums;
-}}
-table.ledger-table td.tag {{
-    color: {PALETTE['muted']};
-    font-size: 0.84rem;
-}}
+    .info-box {
+        border-left: 4px solid #d4af37;
+        background: rgba(212,175,55,.08);
+        padding: 12px 14px;
+        border-radius: 0 12px 12px 0;
+        color: #dfe7f5;
+        margin: 8px 0 16px;
+    }
 
-footer {{ visibility: hidden; }}
-</style>
-""", unsafe_allow_html=True)
+    .success-box {
+        border-left: 4px solid #38d39f;
+        background: rgba(56,211,159,.08);
+        padding: 12px 14px;
+        border-radius: 0 12px 12px 0;
+        color: #dffcf0;
+        margin: 8px 0 16px;
+    }
 
+    .danger-box {
+        border-left: 4px solid #ff6b6b;
+        background: rgba(255,107,107,.08);
+        padding: 12px 14px;
+        border-radius: 0 12px 12px 0;
+        color: #ffe6e6;
+        margin: 8px 0 16px;
+    }
 
-# ----------------------------------------------------------------------------
-# HÀM TÍNH TOÁN (logic giữ nguyên, không đổi)
-# ----------------------------------------------------------------------------
+    label, .stMarkdown p, .stMarkdown li {
+        color: #d9e2f2 !important;
+    }
 
+    [data-baseweb="input"], [data-baseweb="select"], [data-baseweb="base-input"] {
+        border-radius: 12px !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# =========================
+# HÀM XỬ LÝ NGÀY
+# =========================
 def add_months(d: date, months: int) -> date:
-    month_index = d.month - 1 + months
-    year = d.year + month_index // 12
-    month = month_index % 12 + 1
-    day = min(d.day, calendar.monthrange(year, month)[1])
+    """Cộng số tháng, giữ ngày cuối tháng nếu cần."""
+    total = d.year * 12 + (d.month - 1) + months
+    year = total // 12
+    month = total % 12 + 1
+
+    if month == 12:
+        next_month = date(year + 1, 1, 1)
+    else:
+        next_month = date(year, month + 1, 1)
+
+    last_day = (next_month - timedelta(days=1)).day
+    day = min(d.day, last_day)
     return date(year, month, day)
 
 
-def split_into_monthly_chunks(start: date, end: date):
-    chunks = []
-    cur = start
-    while cur < end:
-        nxt = add_months(cur, 1)
-        if nxt > end:
-            nxt = end
-        chunks.append((cur, nxt))
-        cur = nxt
-    return chunks
+def money(v: float) -> str:
+    return f"{v:,.0f} VNĐ".replace(",", ".")
 
 
-def fmt_money(x: float) -> str:
-    return f"{x:,.0f} ₫".replace(",", ".")
+def rate(v: float) -> str:
+    return f"{v:.2f}%"
 
 
-def tinh_lai_tiet_kiem(principal, term_rate, demand_rate, deposit_date, withdrawal_date, term_months):
-    periods = []
+# =========================
+# TÍNH TOÁN
+# =========================
+def calculate_deposit(
+    principal: float,
+    term_rate: float,
+    non_term_rate: float,
+    deposit_date: date,
+    withdraw_date: date,
+    term_months: int,
+    payout_mode: str,
+):
+    """
+    Quy ước:
+    - Số ngày = ngày kết thúc - ngày bắt đầu.
+      Ví dụ gửi 01/01 đến đáo hạn 01/02 => 31 ngày.
+    - Lãi suất năm, quy đổi theo 365 ngày.
+    - Nếu qua ngày đáo hạn mà chưa rút: tự động tái tục đúng kỳ hạn cũ.
+    - Lãi cuối kỳ / hàng tháng / trả trước: lãi đã chi trả không nhập vào gốc.
+    - Nếu rút trước hạn trong kỳ hiện tại:
+      + kỳ đang chạy được tính lại toàn bộ theo lãi suất không kỳ hạn;
+      + lãi đã trả trong kỳ đó được coi là khoản đã nhận trước và được đối trừ vào tiền quyết toán.
+    """
+
+    if withdraw_date <= deposit_date:
+        raise ValueError("Ngày rút phải sau ngày gửi.")
+
     current_start = deposit_date
-    max_loops = 2000
+    total_interest_paid = 0.0
+    settlement_cash = 0.0
+    breakdown = []
+    cycle_no = 1
+    principal_current = principal
+    early_withdrawal = False
 
-    for _ in range(max_loops):
+    # Không giới hạn số vòng tái tục thực tế; ngắt an toàn
+    max_cycles = 5000
+
+    while current_start < withdraw_date and cycle_no <= max_cycles:
         maturity = add_months(current_start, term_months)
 
-        if withdrawal_date >= maturity:
-            days = (maturity - current_start).days
-            interest = principal * (term_rate / 100.0) * days / 365.0
-            periods.append({
-                "start": current_start, "end": maturity, "days": days,
-                "rate": term_rate, "rate_type": "Có kỳ hạn (đủ hạn)",
-                "interest": interest, "completed": True,
-            })
-            current_start = maturity
-            if withdrawal_date == maturity:
-                break
-            continue
-        else:
-            days = (withdrawal_date - current_start).days
-            if days > 0:
-                interest = principal * (demand_rate / 100.0) * days / 365.0
-                periods.append({
-                    "start": current_start, "end": withdrawal_date, "days": days,
-                    "rate": demand_rate, "rate_type": "Không kỳ hạn (rút trước hạn)",
-                    "interest": interest, "completed": False,
-                })
+        # Rút trước ngày đáo hạn của vòng hiện tại
+        if withdraw_date < maturity:
+            early_withdrawal = True
+            days = (withdraw_date - current_start).days
+            actual_interest = (
+                principal_current * (non_term_rate / 100.0) * days / 365.0
+            )
+
+            # Lãi đã trả trong chính kỳ này (nếu có) cần đối trừ khi quyết toán.
+            paid_in_current_cycle = 0.0
+            if payout_mode == "Nhận lãi trước":
+                # Lãi trả trước cho cả kỳ được tính theo lãi suất kỳ hạn.
+                planned_days = (maturity - current_start).days
+                paid_in_current_cycle = (
+                    principal_current
+                    * (term_rate / 100.0)
+                    * planned_days
+                    / 365.0
+                )
+            elif payout_mode == "Nhận lãi hàng tháng":
+                paid_in_current_cycle = 0.0
+                month_cursor = current_start
+                while True:
+                    next_month = add_months(current_start, (month_cursor.month - current_start.month) + 12 * (month_cursor.year - current_start.year) + 1)
+                    if next_month >= withdraw_date or next_month >= maturity:
+                        break
+                    days_month = (next_month - month_cursor).days
+                    paid_in_current_cycle += (
+                        principal_current
+                        * (term_rate / 100.0)
+                        * days_month
+                        / 365.0
+                    )
+                    month_cursor = next_month
+
+            # Với trả lãi trước, khách đã nhận tiền ngay đầu kỳ.
+            # Với trả hàng tháng, chỉ phần đã trả trong kỳ hiện tại được đối trừ.
+            settlement_cash = principal_current + actual_interest - paid_in_current_cycle
+
+            total_interest_paid += paid_in_current_cycle
+
+            breakdown.append(
+                {
+                    "Vòng": cycle_no,
+                    "Từ ngày": current_start.strftime("%d/%m/%Y"),
+                    "Đến ngày": withdraw_date.strftime("%d/%m/%Y"),
+                    "Số ngày": days,
+                    "Trạng thái": "Rút trước hạn",
+                    "Lãi suất áp dụng": rate(non_term_rate),
+                    "Tiền gốc": principal_current,
+                    "Lãi tính lại": actual_interest,
+                    "Lãi đã trả trong kỳ": paid_in_current_cycle,
+                    "Tiền quyết toán": settlement_cash,
+                }
+            )
             break
 
-    total_interest = sum(p["interest"] for p in periods)
-    return periods, total_interest
-
-
-# ----------------------------------------------------------------------------
-# GIAO DIỆN
-# ----------------------------------------------------------------------------
-
-st.markdown(f"""
-<div class="hero-eyebrow">Công cụ tính lãi</div>
-<div class="hero-title">Lãi tiết kiệm của bạn</div>
-<div class="hero-sub">Nhập thông tin sổ tiết kiệm để xem số tiền lãi và tổng số tiền
-nhận được khi đáo hạn — tự động xử lý trường hợp tái tục và rút trước hạn.</div>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="section-label">Thông tin gửi tiền</div>', unsafe_allow_html=True)
-
-col1, col2 = st.columns(2)
-with col1:
-    so_tien = st.number_input("Số tiền gửi (VNĐ)", min_value=0.0, step=1_000_000.0,
-                               value=100_000_000.0, format="%.0f")
-    lai_suat_ky_han = st.number_input("Lãi suất có kỳ hạn (%/năm)", min_value=0.0,
-                                       max_value=100.0, value=5.5, step=0.1, format="%.2f")
-    lai_suat_khong_ky_han = st.number_input("Lãi suất không kỳ hạn (%/năm)", min_value=0.0,
-                                             max_value=100.0, value=0.2, step=0.1, format="%.2f")
-with col2:
-    ngay_gui = st.date_input("Ngày gửi tiền", value=date(2024, 1, 10))
-    ky_han_thang = st.selectbox("Kỳ hạn gửi tiền", options=[1, 2, 3, 6, 9, 12, 13, 18, 24, 36],
-                                 format_func=lambda x: f"{x} tháng", index=2)
-    ngay_rut = st.date_input("Ngày rút tiền", value=date(2024, 8, 15))
-
-st.markdown('<div class="section-label" style="margin-top:0.4rem;">Hình thức nhận lãi</div>', unsafe_allow_html=True)
-phuong_thuc = st.radio("Hình thức nhận lãi", ["Nhận lãi trước", "Nhận lãi hàng tháng", "Nhận lãi cuối kỳ"],
-                        horizontal=True, label_visibility="collapsed")
-
-st.markdown("<div style='height:0.6rem'></div>", unsafe_allow_html=True)
-tinh_toan = st.button("Tính toán", type="primary", use_container_width=True)
-
-if tinh_toan:
-    if ngay_rut <= ngay_gui:
-        st.error("Ngày rút tiền phải sau ngày gửi tiền. Vui lòng kiểm tra lại.")
-    elif so_tien <= 0:
-        st.error("Số tiền gửi phải lớn hơn 0.")
-    else:
-        periods, total_interest = tinh_lai_tiet_kiem(
-            so_tien, lai_suat_ky_han, lai_suat_khong_ky_han, ngay_gui, ngay_rut, ky_han_thang
+        # Đã đến / đúng ngày đáo hạn của vòng hiện tại
+        days = (maturity - current_start).days
+        cycle_interest = (
+            principal_current * (term_rate / 100.0) * days / 365.0
         )
-        total_amount = so_tien + total_interest
-        so_ky_dao_han = sum(1 for p in periods if p["completed"])
-        rut_truoc_han = any(not p["completed"] for p in periods)
 
-        st.markdown('<hr class="gold-rule">', unsafe_allow_html=True)
+        if maturity == withdraw_date:
+            # Rút đúng ngày đáo hạn.
+            final_cash = principal_current + cycle_interest
+            total_interest_paid += 0.0
 
-        # ----- Banner trạng thái -----
-        if rut_truoc_han:
-            last = periods[-1]
-            mat = add_months(last["start"], ky_han_thang)
-            st.markdown(f"""
-            <div class="banner warn">
-            Rút trước hạn của kỳ hiện hành ({last['start'].strftime('%d/%m/%Y')} – {mat.strftime('%d/%m/%Y')}).
-            Phần thời gian chưa đủ kỳ hạn được tính theo lãi suất không kỳ hạn
-            ({lai_suat_khong_ky_han}%/năm).
-            </div>
-            """, unsafe_allow_html=True)
+            if payout_mode == "Nhận lãi trước":
+                # Lãi đã nhận ở đầu vòng này.
+                planned_days = days
+                interest_paid_current = (
+                    principal_current
+                    * (term_rate / 100.0)
+                    * planned_days
+                    / 365.0
+                )
+                final_cash = principal_current
+                total_interest_paid += interest_paid_current
+                settlement_cash = final_cash
+                status = "Đến hạn – lãi đã nhận trước"
+            elif payout_mode == "Nhận lãi hàng tháng":
+                # Tạm tính tổng lãi đã chi hàng tháng trong vòng này.
+                paid_monthly = 0.0
+                month_cursor = current_start
+                while True:
+                    next_month = add_months(current_start, (month_cursor.month - current_start.month) + 12 * (month_cursor.year - current_start.year) + 1)
+                    if next_month > maturity:
+                        break
+                    if next_month == maturity:
+                        break
+                    month_days = (next_month - month_cursor).days
+                    paid_monthly += (
+                        principal_current
+                        * (term_rate / 100.0)
+                        * month_days
+                        / 365.0
+                    )
+                    month_cursor = next_month
+
+                remaining_interest = max(0.0, cycle_interest - paid_monthly)
+                total_interest_paid += paid_monthly + remaining_interest
+                settlement_cash = principal_current + remaining_interest
+                final_cash = settlement_cash
+                status = "Đến hạn – trả lãi kỳ cuối"
+            else:
+                total_interest_paid += cycle_interest
+                settlement_cash = principal_current + cycle_interest
+                final_cash = settlement_cash
+                status = "Đến hạn – nhận lãi cuối kỳ"
+
+            breakdown.append(
+                {
+                    "Vòng": cycle_no,
+                    "Từ ngày": current_start.strftime("%d/%m/%Y"),
+                    "Đến ngày": maturity.strftime("%d/%m/%Y"),
+                    "Số ngày": days,
+                    "Trạng thái": status,
+                    "Lãi suất áp dụng": rate(term_rate),
+                    "Tiền gốc": principal_current,
+                    "Lãi tính": cycle_interest,
+                    "Lãi đã trả trong vòng": total_interest_paid,
+                    "Tiền quyết toán": final_cash,
+                }
+            )
+            break
+
+        # Vòng đã đáo hạn nhưng khách chưa rút -> tái tục
+        if payout_mode == "Nhận lãi trước":
+            cycle_paid = cycle_interest
+            total_interest_paid += cycle_paid
+            settlement_cycle = principal_current
+            payout_note = "Lãi được trả đầu kỳ; gốc tái tục"
+        elif payout_mode == "Nhận lãi hàng tháng":
+            cycle_paid = cycle_interest
+            total_interest_paid += cycle_paid
+            settlement_cycle = principal_current
+            payout_note = "Lãi được trả định kỳ; gốc tái tục"
         else:
-            st.markdown("""
-            <div class="banner positive">
-            Rút tiền đúng ngày đáo hạn — toàn bộ thời gian gửi được hưởng lãi suất có kỳ hạn.
-            </div>
-            """, unsafe_allow_html=True)
+            cycle_paid = cycle_interest
+            total_interest_paid += cycle_paid
+            settlement_cycle = principal_current
+            payout_note = "Lãi được trả cuối kỳ; gốc tái tục"
 
-        if so_ky_dao_han > 0:
-            st.markdown(f"""
-            <div class="banner muted">
-            Sổ tiết kiệm đã được ngân hàng tự động tái tục {so_ky_dao_han} kỳ
-            (mỗi kỳ {ky_han_thang} tháng) trước khi rút tiền.
-            </div>
-            """, unsafe_allow_html=True)
+        breakdown.append(
+            {
+                "Vòng": cycle_no,
+                "Từ ngày": current_start.strftime("%d/%m/%Y"),
+                "Đến ngày": maturity.strftime("%d/%m/%Y"),
+                "Số ngày": days,
+                "Trạng thái": "Đã đáo hạn và tái tục",
+                "Lãi suất áp dụng": rate(term_rate),
+                "Tiền gốc": principal_current,
+                "Lãi tính": cycle_interest,
+                "Lãi đã trả": cycle_paid,
+                "Tiền quyết toán": settlement_cycle,
+            }
+        )
 
-        # ----- Ledger tổng hợp -----
-        maturity_first = add_months(ngay_gui, ky_han_thang)
-        st.markdown(f"""
-        <div class="ledger-row">
-            <div class="ledger-item">
-                <div class="l">Tiền gốc</div>
-                <div class="v">{fmt_money(so_tien)}</div>
+        current_start = maturity
+        cycle_no += 1
+
+    if cycle_no > max_cycles:
+        raise RuntimeError("Khoảng thời gian quá lớn, số vòng tái tục vượt giới hạn an toàn.")
+
+    if not early_withdrawal and withdraw_date != deposit_date:
+        # Tổng tiền khách đã nhận xuyên suốt các vòng:
+        # lãi đã trả trước/hàng tháng/cuối kỳ + gốc tại lần rút cuối.
+        total_received = total_interest_paid + settlement_cash
+    else:
+        # Khi rút trước hạn, tổng giá trị khách đã nhận = lãi đã nhận trước
+        # + tiền quyết toán cuối cùng.
+        total_received = total_interest_paid + settlement_cash
+
+    return {
+        "principal": principal,
+        "term_rate": term_rate,
+        "non_term_rate": non_term_rate,
+        "deposit_date": deposit_date,
+        "withdraw_date": withdraw_date,
+        "term_months": term_months,
+        "payout_mode": payout_mode,
+        "interest_total": total_received - principal,
+        "interest_paid_before_settlement": total_interest_paid,
+        "settlement_cash": settlement_cash,
+        "total_received": total_received,
+        "early_withdrawal": early_withdrawal,
+        "breakdown": breakdown,
+    }
+
+
+# =========================
+# HEADER
+# =========================
+st.markdown(
+    """
+    <div class="hero">
+        <h1>💰 Smart Deposit Calculator</h1>
+        <p>Công cụ mô phỏng tiền gửi tiết kiệm • Tái tục tự động • Xử lý rút trước hạn</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+# =========================
+# INPUT
+# =========================
+left, right = st.columns([1.15, 1], gap="large")
+
+with left:
+    st.markdown('<div class="section-title">Thông tin tiền gửi</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    principal = st.number_input(
+        "Số tiền khách hàng gửi (VNĐ)",
+        min_value=0.0,
+        value=100_000_000.0,
+        step=1_000_000.0,
+        format="%.0f",
+    )
+
+    c1, c2 = st.columns(2)
+    with c1:
+        term_rate = st.number_input(
+            "Lãi suất có kỳ hạn (%/năm)",
+            min_value=0.0,
+            value=5.5,
+            step=0.1,
+            format="%.2f",
+        )
+    with c2:
+        non_term_rate = st.number_input(
+            "Lãi suất không kỳ hạn (%/năm)",
+            min_value=0.0,
+            value=0.2,
+            step=0.05,
+            format="%.2f",
+        )
+
+    c3, c4 = st.columns(2)
+    with c3:
+        deposit_date = st.date_input(
+            "Ngày gửi tiền",
+            value=date.today(),
+            format="DD/MM/YYYY",
+        )
+    with c4:
+        withdraw_date = st.date_input(
+            "Ngày rút tiền",
+            value=add_months(date.today(), 6),
+            format="DD/MM/YYYY",
+        )
+
+    term_options = {
+        "1 tháng": 1,
+        "2 tháng": 2,
+        "3 tháng": 3,
+        "6 tháng": 6,
+        "9 tháng": 9,
+        "12 tháng": 12,
+        "18 tháng": 18,
+        "24 tháng": 24,
+        "36 tháng": 36,
+        "48 tháng": 48,
+        "60 tháng": 60,
+    }
+
+    term_label = st.selectbox(
+        "Kỳ hạn gửi tiền",
+        list(term_options.keys()),
+        index=3,
+    )
+    term_months = term_options[term_label]
+
+    payout_mode = st.radio(
+        "Cách nhận tiền lãi",
+        [
+            "Nhận lãi trước",
+            "Nhận lãi hàng tháng",
+            "Nhận lãi cuối kỳ",
+        ],
+        horizontal=True,
+    )
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    st.markdown(
+        """
+        <div class="info-box">
+        <b>Quy tắc tính:</b> ngày tính lãi được tính từ ngày gửi đến trước ngày đáo hạn/rút tiền.
+        Nếu qua ngày đáo hạn mà khách chưa rút, tiền gửi sẽ tự động tái tục đúng kỳ hạn đã chọn.
+        Khi rút trước hạn, vòng đang gửi được áp dụng lãi suất không kỳ hạn.
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+with right:
+    st.markdown('<div class="section-title">Tóm tắt giao dịch</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    st.write(f"**Gốc ban đầu:** {money(principal)}")
+    st.write(f"**Kỳ hạn:** {term_label}")
+    st.write(f"**Lãi có kỳ hạn:** {rate(term_rate)}/năm")
+    st.write(f"**Lãi không kỳ hạn:** {rate(non_term_rate)}/năm")
+    st.write(f"**Ngày gửi:** {deposit_date.strftime('%d/%m/%Y')}")
+    st.write(f"**Ngày rút:** {withdraw_date.strftime('%d/%m/%Y')}")
+    st.write(f"**Hình thức nhận lãi:** {payout_mode}")
+
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    if withdraw_date <= deposit_date:
+        st.markdown(
+            '<div class="danger-box">Ngày rút phải sau ngày gửi.</div>',
+            unsafe_allow_html=True,
+        )
+
+    calculate = st.button("🧮 TÍNH TOÁN", use_container_width=True)
+
+# =========================
+# KẾT QUẢ
+# =========================
+if calculate:
+    if principal <= 0:
+        st.error("Vui lòng nhập số tiền gửi lớn hơn 0.")
+        st.stop()
+
+    if withdraw_date <= deposit_date:
+        st.error("Ngày rút phải sau ngày gửi.")
+        st.stop()
+
+    try:
+        result = calculate_deposit(
+            principal=principal,
+            term_rate=term_rate,
+            non_term_rate=non_term_rate,
+            deposit_date=deposit_date,
+            withdraw_date=withdraw_date,
+            term_months=term_months,
+            payout_mode=payout_mode,
+        )
+    except Exception as e:
+        st.error(f"Không thể tính toán: {e}")
+        st.stop()
+
+    st.markdown('<div class="section-title">Kết quả</div>', unsafe_allow_html=True)
+
+    if result["early_withdrawal"]:
+        st.markdown(
+            """
+            <div class="danger-box">
+            <b>Rút trước hạn:</b> vòng tiền gửi hiện tại được tính lại theo lãi suất không kỳ hạn.
+            Nếu khách đã nhận lãi trước/hàng tháng trong vòng hiện tại, khoản đó được đối trừ khi quyết toán.
             </div>
-            <div class="ledger-item">
-                <div class="l">Tổng tiền lãi</div>
-                <div class="v">{fmt_money(total_interest)}</div>
+            """,
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            """
+            <div class="success-box">
+            <b>Giao dịch đến hạn:</b> các vòng đã đáo hạn được xử lý và tự động tái tục đúng kỳ hạn đã chọn.
             </div>
-            <div class="ledger-item total">
-                <div class="l">Tổng tiền nhận được</div>
-                <div class="v">{fmt_money(total_amount)}</div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    m1, m2, m3, m4 = st.columns(4)
+
+    with m1:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">Tiền gốc ban đầu</div>
+                <div class="metric-value">{money(result["principal"])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with m2:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">Tổng tiền lãi</div>
+                <div class="metric-value">{money(result["interest_total"])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with m3:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">Tiền quyết toán cuối</div>
+                <div class="metric-value">{money(result["settlement_cash"])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+    with m4:
+        st.markdown(
+            f"""
+            <div class="metric-card">
+                <div class="metric-label">Tổng giá trị khách nhận</div>
+                <div class="metric-value">{money(result["total_received"])}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    st.markdown('<div class="section-title">Chi tiết từng vòng tiền gửi</div>', unsafe_allow_html=True)
+
+    # Chuẩn hóa bảng để Streamlit hiển thị đẹp
+    rows = []
+    for item in result["breakdown"]:
+        rows.append(
+            {
+                "Vòng": item.get("Vòng"),
+                "Từ ngày": item.get("Từ ngày"),
+                "Đến ngày": item.get("Đến ngày"),
+                "Số ngày": item.get("Số ngày"),
+                "Trạng thái": item.get("Trạng thái"),
+                "Lãi suất": item.get("Lãi suất áp dụng"),
+                "Tiền gốc": money(item.get("Tiền gốc", 0)),
+                "Lãi": money(item.get("Lãi tính", item.get("Lãi tính lại", 0))),
+                "Lãi đã trả": money(item.get("Lãi đã trả", item.get("Lãi đã trả trong vòng", 0))),
+                "Tiền quyết toán": money(item.get("Tiền quyết toán", 0)),
+            }
+        )
+
+    st.dataframe(
+        rows,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Vòng": st.column_config.NumberColumn(width="small"),
+            "Số ngày": st.column_config.NumberColumn(width="small"),
+        },
+    )
+
+    st.markdown(
+        f"""
+        <div class="card">
+            <div><b>Hình thức nhận lãi:</b> {payout_mode}</div>
+            <div class="rule"></div>
+            <div><b>Tổng lãi:</b> {money(result["interest_total"])}</div>
+            <div><b>Tiền quyết toán cuối cùng:</b> {money(result["settlement_cash"])}</div>
+            <div><b>Tổng giá trị khách nhận:</b> {money(result["total_received"])}</div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    with st.expander("ℹ️ Lưu ý về mô hình tính toán"):
+        st.markdown(
+            """
+            - Lãi suất được nhập theo **%/năm**, quy đổi số ngày theo **365 ngày**.
+            - Ngày gửi được tính, ngày kết thúc kỳ/rút tiền là mốc kết thúc nên số ngày tính lãi là `ngày_kết_thúc - ngày_bắt_đầu`.
+            - Nếu chưa rút khi đến hạn, tiền gửi được **tái tục đúng kỳ hạn đã chọn**.
+            - Với **nhận lãi trước** hoặc **nhận lãi hàng tháng**, lãi đã chi trả trong vòng đang rút trước hạn sẽ được **đối trừ** khi quyết toán.
+            - Với **nhận lãi cuối kỳ**, lãi của vòng đã đáo hạn được ghi nhận tại thời điểm đáo hạn.
+            - Đây là công cụ mô phỏng nghiệp vụ; quy định thực tế của từng ngân hàng có thể khác về cách tính ngày, cơ chế tái tục và xử lý lãi đã trả khi tất toán trước hạn.
+            """
+        )
+else:
+    st.markdown(
+        """
+        <div class="card" style="text-align:center; padding:34px;">
+            <div style="font-size:44px;">🏦</div>
+            <div style="font-size:22px; font-weight:800; margin-top:8px;">Sẵn sàng tính tiền gửi</div>
+            <div class="subtle" style="margin-top:8px;">
+                Nhập thông tin giao dịch ở trên rồi nhấn <b>TÍNH TOÁN</b>.
             </div>
         </div>
-        <div style="color:{PALETTE['muted']}; font-size:0.84rem; margin-bottom:0.4rem;">
-            Đáo hạn ban đầu {maturity_first.strftime('%d/%m/%Y')} · tổng {(ngay_rut - ngay_gui).days} ngày gửi
-        </div>
-        """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
-        st.markdown('<hr class="hair-rule">', unsafe_allow_html=True)
-
-        # ----- Bảng chi tiết theo kỳ -----
-        st.markdown('<div class="section-label">Chi tiết lãi theo từng kỳ</div>', unsafe_allow_html=True)
-        rows_html = ""
-        for i, p in enumerate(periods, start=1):
-            rows_html += f"""
-            <tr>
-                <td>{i}</td>
-                <td>{p['start'].strftime('%d/%m/%Y')} – {p['end'].strftime('%d/%m/%Y')}</td>
-                <td class="num">{p['days']}</td>
-                <td class="tag">{p['rate_type']}</td>
-                <td class="num">{p['rate']:.2f}%</td>
-                <td class="num">{fmt_money(p['interest'])}</td>
-            </tr>"""
-        st.markdown(f"""
-        <table class="ledger-table">
-            <tr>
-                <th>Kỳ</th><th>Thời gian</th><th class="num">Số ngày</th>
-                <th>Loại lãi suất</th><th class="num">Lãi suất</th><th class="num">Tiền lãi</th>
-            </tr>
-            {rows_html}
-        </table>
-        """, unsafe_allow_html=True)
-
-        st.markdown('<hr class="hair-rule">', unsafe_allow_html=True)
-
-        # ----- Chi tiết theo phương thức -----
-        st.markdown(f'<div class="section-label">{phuong_thuc}</div>', unsafe_allow_html=True)
-
-        if phuong_thuc == "Nhận lãi cuối kỳ":
-            st.markdown(f"""
-            <div class="banner muted">
-            Toàn bộ tiền lãi {fmt_money(total_interest)} được cộng dồn và trả một lần cùng
-            tiền gốc vào ngày rút tiền ({ngay_rut.strftime('%d/%m/%Y')}).
-            </div>
-            """, unsafe_allow_html=True)
-            st.markdown(f"""
-            <table class="ledger-table">
-                <tr><th>Ngày nhận</th><th class="num">Số tiền</th><th>Ghi chú</th></tr>
-                <tr>
-                    <td>{ngay_rut.strftime('%d/%m/%Y')}</td>
-                    <td class="num">{fmt_money(total_amount)}</td>
-                    <td class="tag">Gốc + toàn bộ lãi</td>
-                </tr>
-            </table>
-            """, unsafe_allow_html=True)
-
-        elif phuong_thuc == "Nhận lãi trước":
-            st.markdown("""
-            <div class="banner muted">
-            Với mỗi kỳ đủ hạn, tiền lãi được tạm ứng ngay khi bắt đầu kỳ theo lãi suất
-            có kỳ hạn. Nếu rút trước hạn của kỳ hiện hành, phần lãi tạm ứng dư (nếu có)
-            sẽ được ngân hàng thu hồi khi tất toán.
-            </div>
-            """, unsafe_allow_html=True)
-            rows2 = ""
-            recovered = 0
-            for p in periods:
-                if p["completed"]:
-                    rows2 += f"""
-                    <tr>
-                        <td>{p['start'].strftime('%d/%m/%Y')}</td>
-                        <td class="num">{fmt_money(p['interest'])}</td>
-                        <td class="tag">Lãi kỳ {p['start'].strftime('%d/%m/%Y')} – {p['end'].strftime('%d/%m/%Y')}</td>
-                    </tr>"""
-                else:
-                    full_maturity = add_months(p["start"], ky_han_thang)
-                    full_days = (full_maturity - p["start"]).days
-                    prepaid_estimate = so_tien * (lai_suat_ky_han / 100.0) * full_days / 365.0
-                    recovered = max(0, prepaid_estimate - p["interest"])
-                    rows2 += f"""
-                    <tr>
-                        <td>{p['start'].strftime('%d/%m/%Y')} (tạm ứng)</td>
-                        <td class="num">{fmt_money(prepaid_estimate)}</td>
-                        <td class="tag">Điều chỉnh khi tất toán do rút trước hạn</td>
-                    </tr>"""
-            st.markdown(f"""
-            <table class="ledger-table">
-                <tr><th>Ngày nhận lãi</th><th class="num">Số tiền</th><th>Ghi chú</th></tr>
-                {rows2}
-            </table>
-            """, unsafe_allow_html=True)
-            if recovered > 0:
-                st.markdown(f"""
-                <div class="banner warn">
-                Ngân hàng thu hồi phần lãi tạm ứng dư: {fmt_money(recovered)}.
-                Tiền gốc hoàn trả khi tất toán: {fmt_money(so_tien - recovered)}.
-                </div>
-                """, unsafe_allow_html=True)
-
-        else:  # Nhận lãi hàng tháng
-            st.markdown("""
-            <div class="banner muted">
-            Tiền lãi được chi trả định kỳ hàng tháng trong suốt thời gian gửi;
-            tiền gốc được hoàn trả khi rút tiền.
-            </div>
-            """, unsafe_allow_html=True)
-            rows3 = ""
-            for p in periods:
-                for c_start, c_end in split_into_monthly_chunks(p["start"], p["end"]):
-                    days = (c_end - c_start).days
-                    interest_chunk = so_tien * (p["rate"] / 100.0) * days / 365.0
-                    rows3 += f"""
-                    <tr>
-                        <td>{c_end.strftime('%d/%m/%Y')}</td>
-                        <td class="num">{days}</td>
-                        <td class="tag">{p['rate']:.2f}%/năm · {p['rate_type']}</td>
-                        <td class="num">{fmt_money(interest_chunk)}</td>
-                    </tr>"""
-            st.markdown(f"""
-            <table class="ledger-table">
-                <tr><th>Ngày nhận lãi</th><th class="num">Số ngày</th><th>Lãi suất áp dụng</th><th class="num">Tiền lãi</th></tr>
-                {rows3}
-            </table>
-            <div style="color:{PALETTE['muted']}; font-size:0.86rem;">
-                Khi rút tiền ({ngay_rut.strftime('%d/%m/%Y')}), tiền gốc {fmt_money(so_tien)} được hoàn trả.
-            </div>
-            """, unsafe_allow_html=True)
-
-st.markdown('<hr class="hair-rule">', unsafe_allow_html=True)
-with st.expander("Quy tắc tính lãi áp dụng"):
-    st.markdown(f"""
-- Số ngày tính lãi mỗi kỳ = từ ngày bắt đầu kỳ đến trước 1 ngày đáo hạn hoặc trước 1 ngày rút tiền (cơ sở 365 ngày/năm).
-- Rút đúng hoặc sau ngày đáo hạn của một kỳ → kỳ đó hưởng trọn lãi suất có kỳ hạn.
-- Đến hạn mà không rút → ngân hàng tự động tái tục đúng kỳ hạn ban đầu.
-- Rút trước hạn của kỳ hiện hành → riêng phần thời gian đó tính theo lãi suất không kỳ hạn; các kỳ đã đáo hạn trước đó vẫn giữ nguyên lãi suất có kỳ hạn.
-- Công thức lãi đơn: Tiền lãi = Số tiền gửi × Lãi suất (%/năm) × Số ngày / 365.
-    """)
+st.markdown(
+    """
+    <div style="text-align:center; color:#75839a; font-size:12px; margin-top:28px;">
+        Smart Deposit Calculator • Streamlit
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
