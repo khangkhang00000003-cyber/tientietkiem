@@ -1,4 +1,5 @@
 import streamlit as st
+import base64
 from datetime import date, timedelta
 
 # 1. Cấu hình trang
@@ -9,26 +10,36 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. Chèn CSS để đặt ảnh làm nền và chỉnh độ mờ (opacity)
+# 2. Đọc ảnh thành dạng Base64 để làm nền ổn định trên Streamlit
+def get_base64_of_bin_file(bin_file):
+    try:
+        with open(bin_file, 'rb') as f:
+            data = f.read()
+        return base64.b64encode(data).decode()
+    except Exception:
+        return ""
+
+img_base64 = get_base64_of_bin_file("logo.jpg.jpg")
+
+# 3. CSS xử lý hiển thị ảnh nền mờ (trong suốt)
+# Chỉnh sửa số 0.85 (từ 0.0 đến 1.0) ở 2 chỗ bên dưới để tăng/giảm độ mờ của ảnh nền
 st.markdown(
-    """
+    f"""
     <style>
-    .stApp {
-        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("logo.jpg.jpg");
+    .stApp {{
+        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{img_base64}");
         background-size: cover;
         background-position: center;
+        background-attachment: fixed;
         background-repeat: no-repeat;
-    }
+    }}
     </style>
     """,
     unsafe_allow_html=True
 )
 
-# 3. Nội dung trang web của bạn
-st.title("💰 Tính tiền lãi của Võ Hoàn Khang")
-st.write("Nội dung trang web sẽ hiển thị đè lên trên ảnh nền.")
 # =========================
-# GIAO DIỆN
+# GIAO DIỆN CHÍNH
 # =========================
 st.markdown(
     """
@@ -39,11 +50,8 @@ st.markdown(
         font-family: 'Inter', sans-serif;
     }
 
+    /* Bỏ màu nền ở đây để không đè lên ảnh nền */
     .stApp {
-        background:
-            radial-gradient(circle at 8% 5%, rgba(99, 210, 188, .18), transparent 26%),
-            radial-gradient(circle at 92% 8%, rgba(96, 165, 250, .18), transparent 28%),
-            linear-gradient(180deg, #f7fbff 0%, #eef8f7 100%);
         color: #17324d;
     }
 
@@ -55,9 +63,9 @@ st.markdown(
 
     .hero {
         padding: 30px 34px;
-        border: 1px solid #d9edf0;
+        border: 1px solid rgba(217, 237, 240, 0.7);
         border-radius: 24px;
-        background: linear-gradient(135deg, #ffffff 0%, #e9fbf7 55%, #eef6ff 100%);
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(233,251,247,0.9) 55%, rgba(238,246,255,0.9) 100%);
         box-shadow: 0 18px 50px rgba(57, 91, 117, .10);
         margin-bottom: 22px;
     }
@@ -96,7 +104,7 @@ st.markdown(
         border: 1px solid #d7ebe7;
         border-radius: 18px;
         padding: 20px;
-        background: linear-gradient(145deg, #ffffff, #effbf8);
+        background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(239,251,248,0.9));
         min-height: 115px;
         box-shadow: 0 10px 26px rgba(49, 117, 112, .08);
     }
@@ -141,7 +149,7 @@ st.markdown(
 
     .info-box {
         border-left: 4px solid #1e9ee8;
-        background: #edf8ff;
+        background: rgba(237, 248, 255, 0.9);
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
         color: #34536d;
@@ -150,7 +158,7 @@ st.markdown(
 
     .success-box {
         border-left: 4px solid #20b486;
-        background: #eafbf5;
+        background: rgba(234, 251, 245, 0.9);
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
         color: #256451;
@@ -159,7 +167,7 @@ st.markdown(
 
     .danger-box {
         border-left: 4px solid #f47f7f;
-        background: #fff1f1;
+        background: rgba(255, 241, 241, 0.9);
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
         color: #875052;
@@ -173,15 +181,15 @@ st.markdown(
     [data-baseweb="input"], [data-baseweb="select"], [data-baseweb="base-input"] {
         border-radius: 12px !important;
         border-color: #d7e8ef !important;
-        background: #ffffff !important;
+        background: rgba(255,255,255,0.9) !important;
     }
 
     [data-baseweb="select"] > div {
-        background: #ffffff !important;
+        background: rgba(255,255,255,0.9) !important;
     }
 
     .stRadio label {
-        background: #f5fbfc;
+        background: rgba(245, 251, 252, 0.8);
         border-radius: 10px;
         padding: 6px 10px;
     }
@@ -190,9 +198,9 @@ st.markdown(
         border-radius: 14px;
         overflow: hidden;
         border: 1px solid #dcecf0;
+        background: rgba(255,255,255,0.9);
     }
 
-    /* Làm nút radio sáng, dễ nhìn */
     .stRadio [role="radiogroup"] {
         gap: 8px;
     }
@@ -202,10 +210,9 @@ st.markdown(
 )
 
 # =========================
-# HÀM XỬ LÝ NGÀY
+# HÀM XỬ LÝ NGÀY VÀ ĐỊNH DẠNG SỐ
 # =========================
 def add_months(d: date, months: int) -> date:
-    """Cộng số tháng, giữ ngày cuối tháng nếu cần."""
     total = d.year * 12 + (d.month - 1) + months
     year = total // 12
     month = total % 12 + 1
@@ -219,10 +226,8 @@ def add_months(d: date, months: int) -> date:
     day = min(d.day, last_day)
     return date(year, month, day)
 
-
 def money(v: float) -> str:
     return f"{v:,.0f} VNĐ".replace(",", ".")
-
 
 def rate(v: float) -> str:
     return f"{v:.2f}%"
@@ -240,18 +245,6 @@ def calculate_deposit(
     term_months: int,
     payout_mode: str,
 ):
-    """
-    Quy ước:
-    - Số ngày = ngày kết thúc - ngày bắt đầu.
-      Ví dụ gửi 01/01 đến đáo hạn 01/02 => 31 ngày.
-    - Lãi suất năm, quy đổi theo 365 ngày.
-    - Nếu qua ngày đáo hạn mà chưa rút: tự động tái tục đúng kỳ hạn cũ.
-    - Lãi cuối kỳ / hàng tháng / trả trước: lãi đã chi trả không nhập vào gốc.
-    - Nếu rút trước hạn trong kỳ hiện tại:
-      + kỳ đang chạy được tính lại toàn bộ theo lãi suất không kỳ hạn;
-      + lãi đã trả trong kỳ đó được coi là khoản đã nhận trước và được đối trừ vào tiền quyết toán.
-    """
-
     if withdraw_date <= deposit_date:
         raise ValueError("Ngày rút phải sau ngày gửi.")
 
@@ -262,35 +255,21 @@ def calculate_deposit(
     cycle_no = 1
     principal_current = principal
     early_withdrawal = False
-
-    # Không giới hạn số vòng tái tục thực tế; ngắt an toàn
     max_cycles = 5000
 
     while current_start < withdraw_date and cycle_no <= max_cycles:
         maturity = add_months(current_start, term_months)
 
-        # Rút trước ngày đáo hạn của vòng hiện tại
         if withdraw_date < maturity:
             early_withdrawal = True
             days = (withdraw_date - current_start).days
-            actual_interest = (
-                principal_current * (non_term_rate / 100.0) * days / 365.0
-            )
-
-            # Lãi đã trả trong chính kỳ này (nếu có) cần đối trừ khi quyết toán.
+            actual_interest = (principal_current * (non_term_rate / 100.0) * days / 365.0)
             paid_in_current_cycle = 0.0
+
             if payout_mode == "Nhận lãi trước":
-                # Lãi trả trước cho cả kỳ được tính theo lãi suất kỳ hạn.
                 planned_days = (maturity - current_start).days
-                paid_in_current_cycle = (
-                    principal_current
-                    * (term_rate / 100.0)
-                    * planned_days
-                    / 365.0
-                )
+                paid_in_current_cycle = (principal_current * (term_rate / 100.0) * planned_days / 365.0)
             elif payout_mode == "Nhận lãi hàng tháng":
-                # Tính tổng tiền lãi của các tháng (trong kỳ này) khách đã thực nhận
-                # đến trước ngày rút.
                 paid_in_current_cycle = 0.0
                 month_cursor = current_start
                 while True:
@@ -298,41 +277,28 @@ def calculate_deposit(
                     if next_month >= withdraw_date or next_month >= maturity:
                         break
                     days_month = (next_month - month_cursor).days
-                    paid_in_current_cycle += (
-                        principal_current
-                        * (term_rate / 100.0)
-                        * days_month
-                        / 365.0
-                    )
+                    paid_in_current_cycle += (principal_current * (term_rate / 100.0) * days_month / 365.0)
                     month_cursor = next_month
 
-            # Tiền quyết toán = Gốc + Lãi thực sự được hưởng - Lãi đã nhận
             settlement_cash = principal_current + actual_interest - paid_in_current_cycle
-
-            # Tổng tiền lãi đã trả cho khách cộng thêm lãi khách đã nhận trong kỳ này
             total_interest_paid += paid_in_current_cycle
 
-            breakdown.append(
-                {
-                    "Vòng": cycle_no,
-                    "Từ ngày": current_start.strftime("%d/%m/%Y"),
-                    "Đến ngày": withdraw_date.strftime("%d/%m/%Y"),
-                    "Số ngày": days,
-                    "Trạng thái": "Rút trước hạn",
-                    "Lãi suất áp dụng": rate(non_term_rate),
-                    "Tiền gốc": principal_current,
-                    "Lãi tính lại": actual_interest,
-                    "Lãi đã trả trong kỳ": paid_in_current_cycle,
-                    "Tiền quyết toán": settlement_cash,
-                }
-            )
+            breakdown.append({
+                "Vòng": cycle_no,
+                "Từ ngày": current_start.strftime("%d/%m/%Y"),
+                "Đến ngày": withdraw_date.strftime("%d/%m/%Y"),
+                "Số ngày": days,
+                "Trạng thái": "Rút trước hạn",
+                "Lãi suất áp dụng": rate(non_term_rate),
+                "Tiền gốc": principal_current,
+                "Lãi tính lại": actual_interest,
+                "Lãi đã trả trong kỳ": paid_in_current_cycle,
+                "Tiền quyết toán": settlement_cash,
+            })
             break
 
-        # Đã đến / đúng ngày đáo hạn của vòng hiện tại
         days = (maturity - current_start).days
-        cycle_interest = (
-            principal_current * (term_rate / 100.0) * days / 365.0
-        )
+        cycle_interest = (principal_current * (term_rate / 100.0) * days / 365.0)
 
         if maturity == withdraw_date:
             final_cash = principal_current + cycle_interest
@@ -340,18 +306,12 @@ def calculate_deposit(
 
             if payout_mode == "Nhận lãi trước":
                 planned_days = days
-                interest_paid_current = (
-                    principal_current
-                    * (term_rate / 100.0)
-                    * planned_days
-                    / 365.0
-                )
+                interest_paid_current = (principal_current * (term_rate / 100.0) * planned_days / 365.0)
                 final_cash = principal_current
                 total_interest_paid += interest_paid_current
                 settlement_cash = final_cash
                 status = "Đến hạn – lãi đã nhận trước"
             elif payout_mode == "Nhận lãi hàng tháng":
-                # Khách đã nhận lãi của các tháng trước, đến hạn thì nhận nốt của tháng cuối.
                 paid_monthly = 0.0
                 month_cursor = current_start
                 while True:
@@ -359,12 +319,7 @@ def calculate_deposit(
                     if next_month > maturity or next_month == maturity:
                         break
                     month_days = (next_month - month_cursor).days
-                    paid_monthly += (
-                        principal_current
-                        * (term_rate / 100.0)
-                        * month_days
-                        / 365.0
-                    )
+                    paid_monthly += (principal_current * (term_rate / 100.0) * month_days / 365.0)
                     month_cursor = next_month
 
                 remaining_interest = max(0.0, cycle_interest - paid_monthly)
@@ -378,43 +333,37 @@ def calculate_deposit(
                 final_cash = settlement_cash
                 status = "Đến hạn – nhận lãi cuối kỳ"
 
-            breakdown.append(
-                {
-                    "Vòng": cycle_no,
-                    "Từ ngày": current_start.strftime("%d/%m/%Y"),
-                    "Đến ngày": maturity.strftime("%d/%m/%Y"),
-                    "Số ngày": days,
-                    "Trạng thái": status,
-                    "Lãi suất áp dụng": rate(term_rate),
-                    "Tiền gốc": principal_current,
-                    "Lãi tính": cycle_interest,
-                    "Lãi đã trả trong vòng": total_interest_paid,
-                    "Tiền quyết toán": final_cash,
-                }
-            )
+            breakdown.append({
+                "Vòng": cycle_no,
+                "Từ ngày": current_start.strftime("%d/%m/%Y"),
+                "Đến ngày": maturity.strftime("%d/%m/%Y"),
+                "Số ngày": days,
+                "Trạng thái": status,
+                "Lãi suất áp dụng": rate(term_rate),
+                "Tiền gốc": principal_current,
+                "Lãi tính": cycle_interest,
+                "Lãi đã trả trong vòng": total_interest_paid,
+                "Tiền quyết toán": final_cash,
+            })
             break
 
-        # Vòng đã đáo hạn nhưng khách chưa rút -> tái tục
-        # Không nhập lãi vào gốc.
         if payout_mode == "Nhận lãi trước" or payout_mode == "Nhận lãi hàng tháng" or payout_mode == "Nhận lãi cuối kỳ":
             cycle_paid = cycle_interest
             total_interest_paid += cycle_paid
             settlement_cycle = principal_current
 
-        breakdown.append(
-            {
-                "Vòng": cycle_no,
-                "Từ ngày": current_start.strftime("%d/%m/%Y"),
-                "Đến ngày": maturity.strftime("%d/%m/%Y"),
-                "Số ngày": days,
-                "Trạng thái": "Đã đáo hạn và tái tục",
-                "Lãi suất áp dụng": rate(term_rate),
-                "Tiền gốc": principal_current,
-                "Lãi tính": cycle_interest,
-                "Lãi đã trả": cycle_paid,
-                "Tiền quyết toán": settlement_cycle,
-            }
-        )
+        breakdown.append({
+            "Vòng": cycle_no,
+            "Từ ngày": current_start.strftime("%d/%m/%Y"),
+            "Đến ngày": maturity.strftime("%d/%m/%Y"),
+            "Số ngày": days,
+            "Trạng thái": "Đã đáo hạn và tái tục",
+            "Lãi suất áp dụng": rate(term_rate),
+            "Tiền gốc": principal_current,
+            "Lãi tính": cycle_interest,
+            "Lãi đã trả": cycle_paid,
+            "Tiền quyết toán": settlement_cycle,
+        })
 
         current_start = maturity
         cycle_no += 1
@@ -422,7 +371,6 @@ def calculate_deposit(
     if cycle_no > max_cycles:
         raise RuntimeError("Khoảng thời gian quá lớn, số vòng tái tục vượt giới hạn an toàn.")
 
-    # Tổng giá trị khách đã nhận được và sẽ nhận
     total_received = total_interest_paid + settlement_cash
 
     return {
@@ -463,76 +411,30 @@ with left:
     st.markdown('<div class="section-title">Thông tin tiền gửi</div>', unsafe_allow_html=True)
     st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    principal = st.number_input(
-        "Số tiền khách hàng gửi (VNĐ)",
-        min_value=0.0,
-        value=100_000_000.0,
-        step=1_000_000.0,
-        format="%.0f",
-    )
+    principal = st.number_input("Số tiền khách hàng gửi (VNĐ)", min_value=0.0, value=100_000_000.0, step=1_000_000.0, format="%.0f")
 
     c1, c2 = st.columns(2)
     with c1:
-        term_rate = st.number_input(
-            "Lãi suất có kỳ hạn (%/năm)",
-            min_value=0.0,
-            value=5.5,
-            step=0.1,
-            format="%.2f",
-        )
+        term_rate = st.number_input("Lãi suất có kỳ hạn (%/năm)", min_value=0.0, value=5.5, step=0.1, format="%.2f")
     with c2:
-        non_term_rate = st.number_input(
-            "Lãi suất không kỳ hạn (%/năm)",
-            min_value=0.0,
-            value=0.2,
-            step=0.05,
-            format="%.2f",
-        )
+        non_term_rate = st.number_input("Lãi suất không kỳ hạn (%/năm)", min_value=0.0, value=0.2, step=0.05, format="%.2f")
 
     c3, c4 = st.columns(2)
     with c3:
-        deposit_date = st.date_input(
-            "Ngày gửi tiền",
-            value=date.today(),
-            format="DD/MM/YYYY",
-        )
+        deposit_date = st.date_input("Ngày gửi tiền", value=date.today(), format="DD/MM/YYYY")
     with c4:
-        withdraw_date = st.date_input(
-            "Ngày rút tiền",
-            value=add_months(date.today(), 6),
-            format="DD/MM/YYYY",
-        )
+        withdraw_date = st.date_input("Ngày rút tiền", value=add_months(date.today(), 6), format="DD/MM/YYYY")
 
     term_options = {
-        "1 tháng": 1,
-        "2 tháng": 2,
-        "3 tháng": 3,
-        "6 tháng": 6,
-        "9 tháng": 9,
-        "12 tháng": 12,
-        "18 tháng": 18,
-        "24 tháng": 24,
-        "36 tháng": 36,
-        "48 tháng": 48,
-        "60 tháng": 60,
+        "1 tháng": 1, "2 tháng": 2, "3 tháng": 3, "6 tháng": 6,
+        "9 tháng": 9, "12 tháng": 12, "18 tháng": 18, "24 tháng": 24,
+        "36 tháng": 36, "48 tháng": 48, "60 tháng": 60,
     }
 
-    term_label = st.selectbox(
-        "Kỳ hạn gửi tiền",
-        list(term_options.keys()),
-        index=3,
-    )
+    term_label = st.selectbox("Kỳ hạn gửi tiền", list(term_options.keys()), index=3)
     term_months = term_options[term_label]
 
-    payout_mode = st.radio(
-        "Cách nhận tiền lãi",
-        [
-            "Nhận lãi trước",
-            "Nhận lãi hàng tháng",
-            "Nhận lãi cuối kỳ",
-        ],
-        horizontal=True,
-    )
+    payout_mode = st.radio("Cách nhận tiền lãi", ["Nhận lãi trước", "Nhận lãi hàng tháng", "Nhận lãi cuối kỳ"], horizontal=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
@@ -562,10 +464,7 @@ with right:
     st.markdown("</div>", unsafe_allow_html=True)
 
     if withdraw_date <= deposit_date:
-        st.markdown(
-            '<div class="danger-box">Ngày rút phải sau ngày gửi.</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown('<div class="danger-box">Ngày rút phải sau ngày gửi.</div>', unsafe_allow_html=True)
 
     calculate = st.button("🧮 TÍNH TOÁN", use_container_width=True)
 
@@ -620,64 +519,30 @@ if calculate:
     m1, m2, m3, m4 = st.columns(4)
 
     with m1:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-label">Tiền gốc ban đầu</div>
-                <div class="metric-value">{money(result["principal"])}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Tiền gốc ban đầu</div><div class="metric-value">{money(result["principal"])}</div></div>', unsafe_allow_html=True)
     with m2:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-label">Tổng tiền lãi</div>
-                <div class="metric-value">{money(result["interest_total"])}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Tổng tiền lãi</div><div class="metric-value">{money(result["interest_total"])}</div></div>', unsafe_allow_html=True)
     with m3:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-label">Tiền quyết toán cuối</div>
-                <div class="metric-value">{money(result["settlement_cash"])}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Tiền quyết toán cuối</div><div class="metric-value">{money(result["settlement_cash"])}</div></div>', unsafe_allow_html=True)
     with m4:
-        st.markdown(
-            f"""
-            <div class="metric-card">
-                <div class="metric-label">Tổng giá trị khách nhận</div>
-                <div class="metric-value">{money(result["total_received"])}</div>
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="metric-card"><div class="metric-label">Tổng giá trị khách nhận</div><div class="metric-value">{money(result["total_received"])}</div></div>', unsafe_allow_html=True)
 
     st.markdown('<div class="section-title">Chi tiết từng vòng tiền gửi</div>', unsafe_allow_html=True)
 
     rows = []
     for item in result["breakdown"]:
-        rows.append(
-            {
-                "Vòng": item.get("Vòng"),
-                "Từ ngày": item.get("Từ ngày"),
-                "Đến ngày": item.get("Đến ngày"),
-                "Số ngày": item.get("Số ngày"),
-                "Trạng thái": item.get("Trạng thái"),
-                "Lãi suất": item.get("Lãi suất áp dụng"),
-                "Tiền gốc": money(item.get("Tiền gốc", 0)),
-                "Lãi": money(item.get("Lãi tính", item.get("Lãi tính lại", 0))),
-                "Lãi đã trả": money(item.get("Lãi đã trả", item.get("Lãi đã trả trong vòng", 0))),
-                "Tiền quyết toán": money(item.get("Tiền quyết toán", 0)),
-            }
-        )
+        rows.append({
+            "Vòng": item.get("Vòng"),
+            "Từ ngày": item.get("Từ ngày"),
+            "Đến ngày": item.get("Đến ngày"),
+            "Số ngày": item.get("Số ngày"),
+            "Trạng thái": item.get("Trạng thái"),
+            "Lãi suất": item.get("Lãi suất áp dụng"),
+            "Tiền gốc": money(item.get("Tiền gốc", 0)),
+            "Lãi": money(item.get("Lãi tính", item.get("Lãi tính lại", 0))),
+            "Lãi đã trả": money(item.get("Lãi đã trả", item.get("Lãi đã trả trong vòng", 0))),
+            "Tiền quyết toán": money(item.get("Tiền quyết toán", 0)),
+        })
 
     st.dataframe(
         rows,
