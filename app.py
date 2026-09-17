@@ -21,13 +21,13 @@ def get_base64_of_bin_file(bin_file):
 
 img_base64 = get_base64_of_bin_file("logo.jpg.jpg")
 
-# 3. CSS xử lý hiển thị ảnh nền mờ (trong suốt)
-# Chỉnh sửa số 0.85 (từ 0.0 đến 1.0) ở 2 chỗ bên dưới để tăng/giảm độ mờ của ảnh nền
+# 3. CSS xử lý hiển thị ảnh nền
+# Đã giảm opacity của lớp phủ xuống 0.55 để ảnh nền rõ hơn
 st.markdown(
     f"""
     <style>
     .stApp {{
-        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("data:image/jpeg;base64,{img_base64}");
+        background-image: linear-gradient(rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.55)), url("data:image/jpeg;base64,{img_base64}");
         background-size: cover;
         background-position: center;
         background-attachment: fixed;
@@ -50,7 +50,6 @@ st.markdown(
         font-family: 'Inter', sans-serif;
     }
 
-    /* Bỏ màu nền ở đây để không đè lên ảnh nền */
     .stApp {
         color: #17324d;
     }
@@ -65,7 +64,7 @@ st.markdown(
         padding: 30px 34px;
         border: 1px solid rgba(217, 237, 240, 0.7);
         border-radius: 24px;
-        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(233,251,247,0.9) 55%, rgba(238,246,255,0.9) 100%);
+        background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(233,251,247,0.95) 55%, rgba(238,246,255,0.95) 100%);
         box-shadow: 0 18px 50px rgba(57, 91, 117, .10);
         margin-bottom: 22px;
     }
@@ -89,13 +88,14 @@ st.markdown(
         font-weight: 800;
         color: #23445f;
         margin: 20px 0 10px;
+        text-shadow: 0px 1px 2px rgba(255,255,255,0.8);
     }
 
     .card {
         border: 1px solid #dcecf0;
         border-radius: 18px;
-        padding: 18px 20px;
-        background: rgba(255,255,255,.90);
+        padding: 22px 24px;
+        background: rgba(255, 255, 255, 0.92); /* Tăng độ đục của thẻ để chữ dễ đọc hơn */
         box-shadow: 0 10px 28px rgba(45, 82, 105, .08);
         margin-bottom: 14px;
     }
@@ -104,7 +104,7 @@ st.markdown(
         border: 1px solid #d7ebe7;
         border-radius: 18px;
         padding: 20px;
-        background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(239,251,248,0.9));
+        background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(239,251,248,0.95));
         min-height: 115px;
         box-shadow: 0 10px 26px rgba(49, 117, 112, .08);
     }
@@ -139,7 +139,7 @@ st.markdown(
         font-weight: 800;
         background: linear-gradient(135deg, #22c7a6, #1e9ee8);
         color: white;
-        box-shadow: 0 10px 24px rgba(30, 158, 232, .20);
+        box-shadow: 0 10px 24px rgba(30, 158, 232, .25);
     }
 
     div[data-testid="stButton"] > button:hover {
@@ -149,7 +149,7 @@ st.markdown(
 
     .info-box {
         border-left: 4px solid #1e9ee8;
-        background: rgba(237, 248, 255, 0.9);
+        background: rgba(237, 248, 255, 0.95);
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
         color: #34536d;
@@ -158,7 +158,7 @@ st.markdown(
 
     .success-box {
         border-left: 4px solid #20b486;
-        background: rgba(234, 251, 245, 0.9);
+        background: rgba(234, 251, 245, 0.95);
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
         color: #256451;
@@ -167,7 +167,7 @@ st.markdown(
 
     .danger-box {
         border-left: 4px solid #f47f7f;
-        background: rgba(255, 241, 241, 0.9);
+        background: rgba(255, 241, 241, 0.95);
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
         color: #875052;
@@ -176,33 +176,46 @@ st.markdown(
 
     label, .stMarkdown p, .stMarkdown li {
         color: #3c5369 !important;
+        font-weight: 500;
     }
 
+    /* LÀM NỔI BẬT CÁC Ô NHẬP LIỆU */
     [data-baseweb="input"], [data-baseweb="select"], [data-baseweb="base-input"] {
-        border-radius: 12px !important;
-        border-color: #d7e8ef !important;
-        background: rgba(255,255,255,0.9) !important;
+        border-radius: 10px !important;
+        border: 2px solid #94cce6 !important; /* Viền màu xanh nhạt nổi bật */
+        background: #ffffff !important;       /* Nền trắng tinh 100% */
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important; /* Đổ bóng để ô nổi lên */
+        transition: all 0.2s ease-in-out;
+    }
+
+    [data-baseweb="input"]:focus-within, [data-baseweb="select"]:focus-within {
+        border-color: #1e9ee8 !important; /* Viền đậm hơn khi click vào */
+        box-shadow: 0 4px 14px rgba(30, 158, 232, 0.15) !important;
     }
 
     [data-baseweb="select"] > div {
-        background: rgba(255,255,255,0.9) !important;
+        background: transparent !important; 
     }
 
+    /* Nút chọn (Radio Button) */
     .stRadio label {
-        background: rgba(245, 251, 252, 0.8);
-        border-radius: 10px;
-        padding: 6px 10px;
+        background: #ffffff !important;
+        border: 1px solid #94cce6;
+        border-radius: 8px;
+        padding: 8px 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        font-weight: 600;
     }
 
     [data-testid="stDataFrame"] {
         border-radius: 14px;
         overflow: hidden;
         border: 1px solid #dcecf0;
-        background: rgba(255,255,255,0.9);
+        background: rgba(255,255,255,0.95);
     }
 
     .stRadio [role="radiogroup"] {
-        gap: 8px;
+        gap: 12px;
     }
     </style>
     """,
