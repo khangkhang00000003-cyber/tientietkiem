@@ -1,5 +1,5 @@
-
 import streamlit as st
+from datetime import date, timedelta
 
 # 1. Cấu hình trang
 st.set_page_config(
@@ -289,6 +289,8 @@ def calculate_deposit(
                     / 365.0
                 )
             elif payout_mode == "Nhận lãi hàng tháng":
+                # Tính tổng tiền lãi của các tháng (trong kỳ này) khách đã thực nhận
+                # đến trước ngày rút.
                 paid_in_current_cycle = 0.0
                 month_cursor = current_start
                 while True:
@@ -304,10 +306,10 @@ def calculate_deposit(
                     )
                     month_cursor = next_month
 
-            # Với trả lãi trước, khách đã nhận tiền ngay đầu kỳ.
-            # Với trả hàng tháng, chỉ phần đã trả trong kỳ hiện tại được đối trừ.
+            # Tiền quyết toán = Gốc + Lãi thực sự được hưởng - Lãi đã nhận
             settlement_cash = principal_current + actual_interest - paid_in_current_cycle
 
+            # Tổng tiền lãi đã trả cho khách cộng thêm lãi khách đã nhận trong kỳ này
             total_interest_paid += paid_in_current_cycle
 
             breakdown.append(
@@ -333,12 +335,10 @@ def calculate_deposit(
         )
 
         if maturity == withdraw_date:
-            # Rút đúng ngày đáo hạn.
             final_cash = principal_current + cycle_interest
             total_interest_paid += 0.0
 
             if payout_mode == "Nhận lãi trước":
-                # Lãi đã nhận ở đầu vòng này.
                 planned_days = days
                 interest_paid_current = (
                     principal_current
@@ -351,14 +351,12 @@ def calculate_deposit(
                 settlement_cash = final_cash
                 status = "Đến hạn – lãi đã nhận trước"
             elif payout_mode == "Nhận lãi hàng tháng":
-                # Tạm tính tổng lãi đã chi hàng tháng trong vòng này.
+                # Khách đã nhận lãi của các tháng trước, đến hạn thì nhận nốt của tháng cuối.
                 paid_monthly = 0.0
                 month_cursor = current_start
                 while True:
                     next_month = add_months(current_start, (month_cursor.month - current_start.month) + 12 * (month_cursor.year - current_start.year) + 1)
-                    if next_month > maturity:
-                        break
-                    if next_month == maturity:
+                    if next_month > maturity or next_month == maturity:
                         break
                     month_days = (next_month - month_cursor).days
                     paid_monthly += (
@@ -397,21 +395,11 @@ def calculate_deposit(
             break
 
         # Vòng đã đáo hạn nhưng khách chưa rút -> tái tục
-        if payout_mode == "Nhận lãi trước":
+        # Không nhập lãi vào gốc.
+        if payout_mode == "Nhận lãi trước" or payout_mode == "Nhận lãi hàng tháng" or payout_mode == "Nhận lãi cuối kỳ":
             cycle_paid = cycle_interest
             total_interest_paid += cycle_paid
             settlement_cycle = principal_current
-            payout_note = "Lãi được trả đầu kỳ; gốc tái tục"
-        elif payout_mode == "Nhận lãi hàng tháng":
-            cycle_paid = cycle_interest
-            total_interest_paid += cycle_paid
-            settlement_cycle = principal_current
-            payout_note = "Lãi được trả định kỳ; gốc tái tục"
-        else:
-            cycle_paid = cycle_interest
-            total_interest_paid += cycle_paid
-            settlement_cycle = principal_current
-            payout_note = "Lãi được trả cuối kỳ; gốc tái tục"
 
         breakdown.append(
             {
@@ -434,14 +422,8 @@ def calculate_deposit(
     if cycle_no > max_cycles:
         raise RuntimeError("Khoảng thời gian quá lớn, số vòng tái tục vượt giới hạn an toàn.")
 
-    if not early_withdrawal and withdraw_date != deposit_date:
-        # Tổng tiền khách đã nhận xuyên suốt các vòng:
-        # lãi đã trả trước/hàng tháng/cuối kỳ + gốc tại lần rút cuối.
-        total_received = total_interest_paid + settlement_cash
-    else:
-        # Khi rút trước hạn, tổng giá trị khách đã nhận = lãi đã nhận trước
-        # + tiền quyết toán cuối cùng.
-        total_received = total_interest_paid + settlement_cash
+    # Tổng giá trị khách đã nhận được và sẽ nhận
+    total_received = total_interest_paid + settlement_cash
 
     return {
         "principal": principal,
@@ -458,7 +440,6 @@ def calculate_deposit(
         "early_withdrawal": early_withdrawal,
         "breakdown": breakdown,
     }
-
 
 # =========================
 # HEADER
@@ -681,7 +662,6 @@ if calculate:
 
     st.markdown('<div class="section-title">Chi tiết từng vòng tiền gửi</div>', unsafe_allow_html=True)
 
-    # Chuẩn hóa bảng để Streamlit hiển thị đẹp
     rows = []
     for item in result["breakdown"]:
         rows.append(
