@@ -1,8 +1,7 @@
 
 import streamlit as st
-from datetime import date, timedelta
 
-# 1. Cấu hình trang (luôn ở đầu tiên)
+# 1. Cấu hình trang
 st.set_page_config(
     page_title="Tính tiền lãi của Võ Hoàn Khang",
     page_icon="💰",
@@ -10,12 +9,24 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# 2. Hiển thị ảnh làm banner trải dài full-width
-st.image("logo.jpg.jpg", use_container_width=True)
+# 2. Chèn CSS để đặt ảnh làm nền và chỉnh độ mờ (opacity)
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background-image: linear-gradient(rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.85)), url("logo.jpg.jpg");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
-# 3. Các nội dung tiếp theo của web
+# 3. Nội dung trang web của bạn
 st.title("💰 Tính tiền lãi của Võ Hoàn Khang")
-
+st.write("Nội dung trang web sẽ hiển thị đè lên trên ảnh nền.")
 # =========================
 # GIAO DIỆN
 # =========================
