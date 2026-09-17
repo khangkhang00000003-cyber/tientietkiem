@@ -3,7 +3,7 @@ import streamlit as st
 from datetime import date, timedelta
 
 st.set_page_config(
-    page_title="Tính lãi tiết kiệm của Võ Hoàn Khang",
+    page_title="Tính tiền lãi của Võ Hoàn Khang",
     page_icon="💰",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -23,10 +23,10 @@ st.markdown(
 
     .stApp {
         background:
-            radial-gradient(circle at 10% 10%, rgba(212,175,55,.10), transparent 28%),
-            radial-gradient(circle at 90% 15%, rgba(38,99,235,.10), transparent 26%),
-            #0b1220;
-        color: #eef2ff;
+            radial-gradient(circle at 8% 5%, rgba(99, 210, 188, .18), transparent 26%),
+            radial-gradient(circle at 92% 8%, rgba(96, 165, 250, .18), transparent 28%),
+            linear-gradient(180deg, #f7fbff 0%, #eef8f7 100%);
+        color: #17324d;
     }
 
     .main .block-container {
@@ -36,121 +36,147 @@ st.markdown(
     }
 
     .hero {
-        padding: 28px 32px;
-        border: 1px solid rgba(255,255,255,.10);
+        padding: 30px 34px;
+        border: 1px solid #d9edf0;
         border-radius: 24px;
-        background: linear-gradient(135deg, rgba(18,29,52,.96), rgba(12,20,35,.96));
-        box-shadow: 0 20px 60px rgba(0,0,0,.25);
+        background: linear-gradient(135deg, #ffffff 0%, #e9fbf7 55%, #eef6ff 100%);
+        box-shadow: 0 18px 50px rgba(57, 91, 117, .10);
         margin-bottom: 22px;
     }
 
     .hero h1 {
         margin: 0;
-        font-size: 34px;
+        font-size: 36px;
         font-weight: 800;
-        letter-spacing: -.5px;
+        letter-spacing: -.7px;
+        color: #17324d;
     }
 
     .hero p {
         margin: 8px 0 0;
-        color: #aebbd0;
+        color: #5f7185;
         font-size: 15px;
     }
 
     .section-title {
         font-size: 19px;
-        font-weight: 700;
+        font-weight: 800;
+        color: #23445f;
         margin: 20px 0 10px;
     }
 
     .card {
-        border: 1px solid rgba(255,255,255,.08);
+        border: 1px solid #dcecf0;
         border-radius: 18px;
         padding: 18px 20px;
-        background: rgba(18,29,52,.75);
-        box-shadow: 0 10px 30px rgba(0,0,0,.15);
+        background: rgba(255,255,255,.90);
+        box-shadow: 0 10px 28px rgba(45, 82, 105, .08);
         margin-bottom: 14px;
     }
 
     .metric-card {
-        border: 1px solid rgba(212,175,55,.22);
+        border: 1px solid #d7ebe7;
         border-radius: 18px;
         padding: 20px;
-        background: linear-gradient(145deg, rgba(37,31,17,.92), rgba(17,26,43,.94));
+        background: linear-gradient(145deg, #ffffff, #effbf8);
         min-height: 115px;
+        box-shadow: 0 10px 26px rgba(49, 117, 112, .08);
     }
 
     .metric-label {
-        color: #aebbd0;
+        color: #6d7f92;
         font-size: 13px;
         margin-bottom: 8px;
     }
 
     .metric-value {
-        font-size: 26px;
+        font-size: 24px;
         font-weight: 800;
-        color: #f7d774;
+        color: #108b78;
     }
 
     .subtle {
-        color: #9aa9bf;
+        color: #7890a3;
         font-size: 13px;
     }
 
     .rule {
         height: 1px;
-        background: rgba(255,255,255,.08);
+        background: #e4eef2;
         margin: 14px 0;
     }
 
     div[data-testid="stButton"] > button {
         border-radius: 12px;
         border: 0;
-        padding: 0.72rem 1.2rem;
-        font-weight: 700;
-        background: linear-gradient(135deg, #e5c55e, #b8922f);
-        color: #111827;
-        box-shadow: 0 10px 24px rgba(212,175,55,.20);
+        padding: 0.75rem 1.2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #22c7a6, #1e9ee8);
+        color: white;
+        box-shadow: 0 10px 24px rgba(30, 158, 232, .20);
     }
 
     div[data-testid="stButton"] > button:hover {
-        filter: brightness(1.05);
+        filter: brightness(1.04);
         transform: translateY(-1px);
     }
 
     .info-box {
-        border-left: 4px solid #d4af37;
-        background: rgba(212,175,55,.08);
+        border-left: 4px solid #1e9ee8;
+        background: #edf8ff;
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
-        color: #dfe7f5;
+        color: #34536d;
         margin: 8px 0 16px;
     }
 
     .success-box {
-        border-left: 4px solid #38d39f;
-        background: rgba(56,211,159,.08);
+        border-left: 4px solid #20b486;
+        background: #eafbf5;
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
-        color: #dffcf0;
+        color: #256451;
         margin: 8px 0 16px;
     }
 
     .danger-box {
-        border-left: 4px solid #ff6b6b;
-        background: rgba(255,107,107,.08);
+        border-left: 4px solid #f47f7f;
+        background: #fff1f1;
         padding: 12px 14px;
         border-radius: 0 12px 12px 0;
-        color: #ffe6e6;
+        color: #875052;
         margin: 8px 0 16px;
     }
 
     label, .stMarkdown p, .stMarkdown li {
-        color: #d9e2f2 !important;
+        color: #3c5369 !important;
     }
 
     [data-baseweb="input"], [data-baseweb="select"], [data-baseweb="base-input"] {
         border-radius: 12px !important;
+        border-color: #d7e8ef !important;
+        background: #ffffff !important;
+    }
+
+    [data-baseweb="select"] > div {
+        background: #ffffff !important;
+    }
+
+    .stRadio label {
+        background: #f5fbfc;
+        border-radius: 10px;
+        padding: 6px 10px;
+    }
+
+    [data-testid="stDataFrame"] {
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid #dcecf0;
+    }
+
+    /* Làm nút radio sáng, dễ nhìn */
+    .stRadio [role="radiogroup"] {
+        gap: 8px;
     }
     </style>
     """,
@@ -705,7 +731,7 @@ else:
 
 st.markdown(
     """
-    <div style="text-align:center; color:#75839a; font-size:12px; margin-top:28px;">
+    <div style="text-align:center; color:#7b93a6; font-size:12px; margin-top:28px;">
         Smart Deposit Calculator • Streamlit
     </div>
     """,
