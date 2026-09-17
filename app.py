@@ -448,8 +448,8 @@ def calculate_deposit(
 st.markdown(
     """
     <div class="hero">
-        <h1>💰 Smart Deposit Calculator</h1>
-        <p>Công cụ mô phỏng tiền gửi tiết kiệm • Tái tục tự động • Xử lý rút trước hạn</p>
+        <h1>💰 Tính tiền lãi của Võ Hoàn Khang</h1>
+        <p>Công cụ tính tiền lãi tiền gửi • Tái tục tự động • Xử lý rút trước hạn</p>
     </div>
     """,
     unsafe_allow_html=True,
